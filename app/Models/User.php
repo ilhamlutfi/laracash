@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -28,5 +29,31 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function wallets(): HasMany
+    {
+        return $this->hasMany(Wallet::class)->orderBy('name');
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class)->latest('transaction_date');
+    }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    public function savingGoals(): HasMany
+    {
+        return $this->hasMany(SavingGoal::class);
+    }
+
+    // Total balance across all wallets
+    public function getTotalBalanceAttribute(): float
+    {
+        return $this->wallets()->where('is_active', true)->sum('balance');
     }
 }
