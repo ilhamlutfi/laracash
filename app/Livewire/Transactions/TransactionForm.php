@@ -30,7 +30,7 @@ class TransactionForm extends Component
             'note'             => 'nullable|string|max:255',
             'transaction_date' => 'required|date',
             'wallet_id'        => 'required|exists:wallets,id',
-            'category_id'      => 'nullable|exists:categories,id',
+            'category_id'      => 'required|exists:categories,id',
         ];
     }
 

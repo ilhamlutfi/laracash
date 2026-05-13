@@ -17,10 +17,18 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        User::create(
+            [
+                'name' => 'Ilham Lutfi',
+                'email' => 'ilhamlutfi153@gmail.com',
+                'password' => bcrypt('risa2312'),
+            ],
+            [
+                'name' => 'Risa Rahmayani',
+                'email' => 'risarahmayani@gmail.com',
+                'password' => bcrypt('ilham0705'),
+            ]
+        );
 
         $this->call([
             CategorySeeder::class,

@@ -49,15 +49,77 @@ class GoalList extends Component
         $validated = $this->validate();
 
         if ($this->editingId) {
+
             SavingGoal::where('user_id', auth()->id())
                 ->findOrFail($this->editingId)
                 ->update($validated);
+
+            $message = 'Target berhasil diperbarui';
         } else {
-            SavingGoal::create([...$validated, 'user_id' => auth()->id()]);
+
+            SavingGoal::create([
+                ...$validated,
+                'user_id' => auth()->id(),
+                'status' => 'active',
+            ]);
+
+            $message = 'Target berhasil dibuat';
         }
 
         $this->showForm = false;
-        $this->dispatch('notify', message: 'Target tabungan disimpan', type: 'success');
+
+        $this->resetForm();
+
+        $this->dispatch(
+            'notify',
+            message: $message,
+            type: 'success'
+        );
+    }
+
+    public function openEdit(int $id): void
+    {
+        $goal = SavingGoal::where('user_id', auth()->id())
+            ->findOrFail($id);
+
+        $this->editingId     = $goal->id;
+        $this->name          = $goal->name;
+        $this->description   = $goal->description ?? '';
+        $this->target_amount = $goal->target_amount;
+        $this->current_amount = $goal->current_amount;
+        $this->target_date   = $goal->target_date?->format('Y-m-d') ?? '';
+        $this->color         = $goal->color;
+        $this->icon          = $goal->icon ?? 'piggy-bank';
+
+        $this->showForm = true;
+    }
+
+    public function delete(int $id): void
+    {
+        SavingGoal::where('user_id', auth()->id())
+            ->findOrFail($id)
+            ->delete();
+
+        $this->dispatch(
+            'notify',
+            message: 'Target berhasil dihapus',
+            type: 'success'
+        );
+    }
+
+    public function resetForm(): void
+    {
+        $this->reset([
+            'editingId',
+            'name',
+            'description',
+            'target_amount',
+            'current_amount',
+            'target_date',
+        ]);
+
+        $this->color = '#10b981';
+        $this->icon = 'piggy-bank';
     }
 
     public function render()

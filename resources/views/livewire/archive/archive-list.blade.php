@@ -72,7 +72,7 @@
                             <div class="flex items-center gap-3 px-5 py-3.5">
                                 <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
                                      style="background-color: {{ $tx->category?->color ?? '#6b7280' }}20; color: {{ $tx->category?->color ?? '#6b7280' }}">
-                                    {{ $tx->type === 'income' ? '↑' : '↓' }}
+                                    {{ $tx->type === 'income' ? '↓' : '↑' }}
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-slate-900 truncate">
