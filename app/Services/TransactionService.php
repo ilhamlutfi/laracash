@@ -57,7 +57,7 @@ class TransactionService
         }
     }
 
-    public function getFilteredTransactions(int $userId, array $filters = [], int $perPage = 15)
+    public function getFilteredTransactions(int $userId, array $filters = [], int $perPage = 10)
     {
         $query = Transaction::forUser($userId)
             ->with(['category', 'wallet'])

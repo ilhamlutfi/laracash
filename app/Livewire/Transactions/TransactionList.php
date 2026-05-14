@@ -14,12 +14,12 @@ class TransactionList extends Component
     use WithPagination;
 
     // Filters
-    public string $search      = '';
-    public string $filterType  = '';
+    public string $search         = '';
+    public string $filterType     = '';
     public string $filterWallet   = '';
     public string $filterCategory = '';
-    public string $filterFrom  = '';
-    public string $filterTo    = '';
+    public string $filterDateFrom     = '';
+    public string $filterDateTo       = '';
 
     // Delete modal
     public bool $showDeleteModal  = false;
@@ -33,19 +33,28 @@ class TransactionList extends Component
         'filterCategory' => ['except' => ''],
     ];
 
-    public function updatingSearch(): void
+    // Method untuk Reset Filter
+    public function resetFilters(): void
+    {
+        $this->reset([
+            'search',
+            'filterType',
+            'filterWallet',
+            'filterCategory',
+            'filterDateFrom',
+            'filterDateTo'
+        ]);
+
+        $this->resetPage();
+    }
+
+    // Lifecycle hooks untuk reset page saat filter berubah (Opsional: Tambahkan untuk filter tanggal juga)
+    public function updatingFilterDateFrom(): void
     {
         $this->resetPage();
     }
-    public function updatingFilterType(): void
-    {
-        $this->resetPage();
-    }
-    public function updatingFilterWallet(): void
-    {
-        $this->resetPage();
-    }
-    public function updatingFilterCategory(): void
+
+    public function updatingFilterDateTo(): void
     {
         $this->resetPage();
     }
@@ -84,8 +93,8 @@ class TransactionList extends Component
             'type'        => $this->filterType,
             'wallet_id'   => $this->filterWallet,
             'category_id' => $this->filterCategory,
-            'date_from'   => $this->filterFrom,
-            'date_to'     => $this->filterTo,
+            'date_from'   => $this->filterDateFrom,
+            'date_to'     => $this->filterDateTo,
         ]);
 
         $wallets    = Wallet::where('user_id', auth()->id())->where('is_active', true)->get();

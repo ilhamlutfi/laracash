@@ -8,44 +8,89 @@
         </button>
     </div>
 
-    {{-- Filters --}}
-    <div class="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
-        {{-- Search --}}
-        <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
-            <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari transaksi..."
-                class="w-full pl-9 rounded-xl border-slate-200 text-sm" />
-        </div>
-
-        {{-- Filter Row --}}
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <select wire:model.live="filterType" class="rounded-xl border-slate-200 text-sm">
-                <option value="">Semua Tipe</option>
-                <option value="income">Pemasukan</option>
-                <option value="expense">Pengeluaran</option>
-            </select>
-
-            <select wire:model.live="filterWallet" class="rounded-xl border-slate-200 text-sm">
-                <option value="">Semua Dompet</option>
-                @foreach ($wallets as $w)
-                    <option value="{{ $w->id }}">{{ $w->name }}</option>
-                @endforeach
-            </select>
-
-            <select wire:model.live="filterCategory" class="rounded-xl border-slate-200 text-sm">
-                <option value="">Semua Kategori</option>
-                @foreach ($categories as $c)
-                    <option value="{{ $c->id }}">{{ $c->name }}</option>
-                @endforeach
-            </select>
-
-            <button
-                wire:click="$set('search', ''); $set('filterType', ''); $set('filterWallet', ''); $set('filterCategory', '')"
-                class="text-xs text-slate-500 border border-slate-200 rounded-xl px-3 transition-colors">
-                Reset Filter
+    <div x-data="{ open: false }" class="space-y-3">
+        {{-- Tombol Toggle Filter --}}
+        <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-700"></h3>
+            <button @click="open = !open"
+                class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                <span x-text="open ? 'Sembunyikan Filter' : 'Tampilkan Filter'"></span>
+                <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
             </button>
         </div>
+
+        {{-- Bagian yang di-Collapse --}}
+        <div x-show="open" x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 transform -translate-y-2"
+            x-transition:enter-end="opacity-100 transform translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 transform translate-y-0"
+            x-transition:leave-end="opacity-0 transform -translate-y-2"
+            class="bg-white rounded-2xl border border-slate-100 p-4 space-y-4 shadow-sm" style="display: none;">
+            {{-- inline style agar tidak kedip saat refresh --}}
+
+            {{-- Baris Atas: Search & Date Range --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                {{-- Search --}}
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+                    <input wire:model.live.debounce.300ms="search" type="search"
+                        placeholder="Cari catatan transaksi..."
+                        class="w-full pl-9 rounded-xl border-slate-200 text-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                </div>
+
+                {{-- Date From --}}
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">DR:</span>
+                    <input wire:model.live="filterDateFrom" type="date"
+                        class="w-full pl-10 rounded-xl border-slate-200 text-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                </div>
+
+                {{-- Date To --}}
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">SD:</span>
+                    <input wire:model.live="filterDateTo" type="date"
+                        class="w-full pl-10 rounded-xl border-slate-200 text-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                </div>
+            </div>
+
+            {{-- Baris Bawah: Dropdowns & Reset --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <select wire:model.live="filterType"
+                    class="rounded-xl border-slate-200 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Semua Tipe</option>
+                    <option value="income">Pemasukan</option>
+                    <option value="expense">Pengeluaran</option>
+                </select>
+
+                <select wire:model.live="filterWallet"
+                    class="rounded-xl border-slate-200 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Semua Dompet</option>
+                    @foreach ($wallets as $w)
+                        <option value="{{ $w->id }}">{{ $w->name }}</option>
+                    @endforeach
+                </select>
+
+                <select wire:model.live="filterCategory"
+                    class="rounded-xl border-slate-200 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Semua Kategori</option>
+                    @foreach ($categories as $c)
+                        <option value="{{ $c->id }}">{{ $c->name }}</option>
+                    @endforeach
+                </select>
+
+                <button wire:click="resetFilters"
+                    class="text-xs font-medium text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 hover:bg-red-100 transition-colors">
+                    Reset Filter
+                </button>
+            </div>
+        </div>
     </div>
+
+
 
     {{-- Transaction List --}}
     <div class="bg-white rounded-3xl border border-slate-100 divide-y divide-slate-50 overflow-hidden">
