@@ -1,20 +1,21 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\ProfileController;
-use App\Livewire\Dashboard\DashboardPage;
-use App\Livewire\Transactions\TransactionList;
 use App\Livewire\Archive\ArchiveList;
-use App\Livewire\Wallets\WalletList;
+use App\Livewire\Dashboard\DashboardPage;
 use App\Livewire\SavingGoals\GoalList;
+use App\Livewire\Transactions\TransactionList;
+use App\Livewire\Wallets\WalletList;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+// login google
+Route::get('/auth/google/redirect', [GoogleLoginController::class, 'redirect'])->name('auth.google-redirect');
+Route::get('/auth/google/callback', [GoogleLoginController::class, 'callback'])->name('auth.google-callback');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/',            DashboardPage::class)->name('dashboard');
