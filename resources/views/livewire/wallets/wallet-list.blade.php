@@ -38,13 +38,15 @@
                             <p class="text-xs text-slate-400">{{ $wallet->type_label }}</p>
                         </div>
                     </div>
-                    <div class="flex gap-1">
+                    <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
                         <button wire:click="openEdit({{ $wallet->id }})"
-                            class="p-1.5 text-slate-400 hover:text-brand-500 rounded-lg hover:bg-slate-50 transition-colors text-xs">✏️</button>
+                            class=" flex items-center justify-center rounded-xl hover:bg-white active:bg-white text-base">✏️</button>
                         <button wire:click="toggleActive({{ $wallet->id }})"
-                            class="p-1.5 text-slate-400 hover:text-amber-500 rounded-lg hover:bg-slate-50 transition-colors text-xs">
+                            class=" flex items-center justify-center rounded-xl hover:bg-white active:bg-white text-base">
                             {{ $wallet->is_active ? '👁️' : '🚫' }}
                         </button>
+                        <button wire:click="confirmDelete({{ $wallet->id }}, '{{ $wallet->name }}')"
+                            class=" flex items-center justify-center rounded-xl hover:bg-white active:bg-white text-base">🗑️</button>
                     </div>
                 </div>
 
@@ -92,7 +94,7 @@
                                 <option value="cash">💵 Tunai</option>
                                 <option value="bank">🏦 Bank</option>
                                 <option value="e-wallet">📱 E-Wallet</option>
-                                <option value="savings">🐷 Tabungan</option>
+                                <option value="savings">💵 Tabungan</option>
                             </select>
                         </div>
 
@@ -127,5 +129,36 @@
                     </div>
                 </div>
             </div>
+    @endif
+
+    @if ($showDeleteModal)
+        <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" wire:click="$set('showDeleteModal', false)">
+            </div>
+            <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center" x-data
+                x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-90"
+                x-transition:enter-end="opacity-100 scale-100">
+
+                <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center text-4xl mx-auto mb-4">
+                    🗑️
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Hapus Dompet?</h3>
+                <p class="text-sm text-slate-500 mb-6 px-4">
+                    Dompet <strong class="text-red-600">{{ $deleteTargetName }}</strong> akan dihapus secara permanen.
+                    Tindakan ini tidak dapat dibatalkan.
+                </p>
+                <div class="flex gap-3">
+                    <button wire:click="$set('showDeleteModal', false)"
+                        class="flex-1 py-3 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                        Batal
+                    </button>
+                    <button wire:click="delete"
+                        class="flex-1 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold shadow-lg shadow-red-200 transition-colors">
+                        Ya, Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endifdiv>
     @endif
 </div>

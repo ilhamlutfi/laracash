@@ -134,7 +134,7 @@
                         {{ $tx->formatted_amount }}
                     </p>
                     {{-- Action buttons (shown on hover) --}}
-                    <div class="flex gap-1">
+                     <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
                         <button @click="$dispatch('edit-transaction', { id: {{ $tx->id }} })"
                             class="text-xs text-slate-400 hover:text-brand-500 transition-colors">✏️</button>
                         <button wire:click="confirmDelete({{ $tx->id }}, '{{ addslashes($tx->note) }}')"

@@ -3,6 +3,7 @@
 namespace App\Livewire\Wallets;
 
 use App\Models\Wallet;
+use DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -10,6 +11,9 @@ class WalletList extends Component
 {
     public bool $showForm = false;
     public ?int $editingId = null;
+    public bool $showDeleteModal = false;
+    public ?int $deleteTargetId = null;
+    public string $deleteTargetName = '';
 
     public string $name    = '';
     public string $type    = 'cash';
@@ -69,6 +73,31 @@ class WalletList extends Component
     {
         $wallet = Wallet::where('user_id', auth()->id())->findOrFail($id);
         $wallet->update(['is_active' => !$wallet->is_active]);
+    }
+
+    public function confirmDelete(int $id, string $name): void
+    {
+        $this->deleteTargetId = $id;
+        $this->deleteTargetName = $name;
+        $this->showDeleteModal = true;
+    }
+
+    public function delete(): void
+    {
+        $wallet = Wallet::where('user_id', auth()->id())->findOrFail($this->deleteTargetId);
+
+        // Gunakan Database Transaction agar jika satu gagal, semua dibatalkan
+        DB::transaction(function () use ($wallet) {
+            // 1. Hapus semua transaksi terkait dompet ini
+            $wallet->transactions()->delete();
+
+            // 2. Hapus dompetnya
+            $wallet->delete();
+        });
+
+        $this->showDeleteModal = false;
+        $this->deleteTargetId = null;
+        $this->dispatch('notify', message: 'Dompet dan semua transaksinya berhasil dihapus', type: 'success');
     }
 
     public function render()

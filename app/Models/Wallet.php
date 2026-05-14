@@ -29,6 +29,26 @@ class Wallet extends Model
         ];
     }
 
+    // Tambahkan ini di dalam class Wallet (App\Models\Wallet.php)
+
+    protected static function booted()
+    {
+        static::deleting(function ($wallet) {
+            if ($wallet->isForceDeleting()) {
+                // Jika hapus permanen, hapus permanen juga transaksinya
+                $wallet->transactions()->forceDelete();
+            } else {
+                // Jika soft delete, soft delete juga transaksinya
+                $wallet->transactions()->delete();
+            }
+        });
+
+        static::restoring(function ($wallet) {
+            // Opsional: Jika dompet di-restore, transaksi juga kembali
+            $wallet->transactions()->restore();
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
