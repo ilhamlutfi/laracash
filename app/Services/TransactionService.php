@@ -57,7 +57,7 @@ class TransactionService
         }
     }
 
-    public function getFilteredTransactions(int $userId, array $filters = [], int $perPage = 10)
+    public function getFilteredTransactions(int $userId, array $filters = [], int $perPage = 6)
     {
         $query = Transaction::forUser($userId)
             ->with(['category', 'wallet'])
@@ -91,20 +91,21 @@ class TransactionService
         return $query->paginate($perPage);
     }
 
-    public function getMonthlySummary(int $userId, int $year, int $month): array
+    public function getMonthlySummary(int $userId, int $year, int $month, int $perPage = 7): array
     {
-        $transactions = Transaction::forUser($userId)
+        $query = Transaction::forUser($userId)
             ->forMonth($year, $month)
-            ->with(['category', 'wallet'])
-            ->latest('transaction_date')
-            ->get();
+            ->with(['category', 'wallet']);
+
+        // Hitung total dari SEMUA data di bulan itu (sebelum dipaginasi)
+        $income  = (clone $query)->where('type', 'income')->sum('amount');
+        $expense = (clone $query)->where('type', 'expense')->sum('amount');
 
         return [
-            'transactions' => $transactions,
-            'income'       => $transactions->where('type', 'income')->sum('amount'),
-            'expense'      => $transactions->where('type', 'expense')->sum('amount'),
-            'balance'      => $transactions->where('type', 'income')->sum('amount')
-                - $transactions->where('type', 'expense')->sum('amount'),
+            'transactions' => $query->latest('transaction_date')->simplePaginate($perPage),
+            'income'       => $income,
+            'expense'      => $expense,
+            'balance'      => $income - $expense,
         ];
     }
 

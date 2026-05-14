@@ -4,44 +4,37 @@ namespace App\Livewire\Dashboard;
 
 use App\Services\DashboardService;
 use Livewire\Component;
+use Livewire\Attributes\On;
 
 class DashboardPage extends Component
 {
     public int $selectedYear;
     public int $selectedMonth;
 
-    public array $summary      = [];
-    public float $totalBalance = 0;
-    public array $recentTx     = [];
-    public array $chartData    = [];
-    public array $categoryData = [];
-
-    public function mount(DashboardService $service): void
+    public function mount(): void
     {
         $this->selectedYear  = now()->year;
         $this->selectedMonth = now()->month;
-        $this->loadData($service);
     }
 
-    public function updatedSelectedMonth(DashboardService $service): void
+    // Listener ini akan memicu render() ulang secara otomatis
+    #[On('transaction-saved')]
+    #[On('transaction-deleted')]
+    public function refreshDashboard(): void
     {
-        $this->loadData($service);
+        // Biarkan kosong, fungsinya hanya sebagai pemicu (trigger) render ulang
     }
 
-    private function loadData(DashboardService $service): void
+    public function render(DashboardService $service)
     {
         $userId = auth()->id();
 
-        $this->totalBalance  = $service->getTotalBalance($userId);
-        $this->summary       = $service->getSummary($userId, $this->selectedYear, $this->selectedMonth);
-        $this->recentTx      = $service->getRecentTransactions($userId, 8)->toArray();
-        $this->chartData     = $service->getMonthlyChart($userId, 6);
-        $this->categoryData  = $service->getExpenseByCategory($userId, $this->selectedYear, $this->selectedMonth);
-    }
-
-    public function render()
-    {
-        return view('livewire.dashboard.dashboard-page')
-            ->layout('layouts.app', ['title' => 'Dashboard']);
+        // Ambil data secara real-time di sini
+        return view('livewire.dashboard.dashboard-page', [
+            'totalBalance' => $service->getTotalBalance($userId),
+            'summary'      => $service->getSummary($userId, $this->selectedYear, $this->selectedMonth),
+            'recentTx'     => $service->getRecentTransactions($userId, 8),
+            'categoryData' => $service->getExpenseByCategory($userId, $this->selectedYear, $this->selectedMonth),
+        ])->layout('layouts.app', ['title' => 'Dashboard']);
     }
 }

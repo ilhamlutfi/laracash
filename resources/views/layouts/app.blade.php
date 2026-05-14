@@ -78,7 +78,8 @@
         </aside>
 
         {{-- ===== MAIN CONTENT ===== --}}
-        <main class="flex-1 lg:pl-64 min-h-full pb-20 lg:pb-0">
+        {{-- <main class="flex-1 lg:pl-64 min-h-full pb-20 lg:pb-0"> --}}
+        <main class="flex-1 lg:pl-64 min-h-full pb-32 lg:pb-8">
             {{ $slot }}
         </main>
     </div>

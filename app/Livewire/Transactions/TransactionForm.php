@@ -65,13 +65,15 @@ class TransactionForm extends Component
         if ($this->editingId) {
             $tx = Transaction::forUser(auth()->id())->findOrFail($this->editingId);
             $service->update($tx, $validated);
-            $this->dispatch('notify', message: 'Transaksi berhasil diperbarui', type: 'success');
+            $this->dispatch('notify', message: 'Berhasil diperbarui', type: 'success');
         } else {
             $service->create($validated, auth()->id());
-            $this->dispatch('notify', message: 'Transaksi berhasil ditambahkan', type: 'success');
+            $this->dispatch('notify', message: 'Berhasil ditambahkan', type: 'success');
         }
 
         $this->showModal = false;
+
+        // Memastikan event dikirim ke komponen lain
         $this->dispatch('transaction-saved');
     }
 

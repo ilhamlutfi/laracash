@@ -83,6 +83,7 @@ class TransactionList extends Component
     #[On('transaction-saved')]
     public function refreshList(): void
     {
+        // Reset ke halaman 1 agar transaksi terbaru langsung muncul di paling atas
         $this->resetPage();
     }
 

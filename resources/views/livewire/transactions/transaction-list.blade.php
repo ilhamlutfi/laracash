@@ -96,7 +96,8 @@
     <div class="bg-white rounded-3xl border border-slate-100 divide-y divide-slate-50 overflow-hidden">
 
         @forelse($transactions as $tx)
-            <div class="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors group">
+            <div wire:key="tx-{{ $tx['id'] }}"
+                class="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors group">
 
                 {{-- Category Icon --}}
                 <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-base font-bold"
@@ -134,7 +135,7 @@
                         {{ $tx->formatted_amount }}
                     </p>
                     {{-- Action buttons (shown on hover) --}}
-                     <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
                         <button @click="$dispatch('edit-transaction', { id: {{ $tx->id }} })"
                             class="text-xs text-slate-400 hover:text-brand-500 transition-colors">✏️</button>
                         <button wire:click="confirmDelete({{ $tx->id }}, '{{ addslashes($tx->note) }}')"
@@ -152,7 +153,7 @@
     </div>
 
     {{-- Pagination --}}
-    <div class="pb-2">
+    <div class="mt-8 pb-20 sm:pb-0"> {{-- pb-20 khusus mobile agar menjauh dari bottom nav --}}
         {{ $transactions->links() }}
     </div>
 
