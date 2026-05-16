@@ -14,11 +14,16 @@ class Transaction extends Model
     protected $fillable = [
         'user_id',
         'wallet_id',
+        'from_wallet_id',
+        'to_wallet_id',
+        'target_user_id',
         'category_id',
         'type',
         'amount',
         'note',
-        'transaction_date'
+        'transaction_date',
+        'is_transfer',
+        'is_internal_transfer'
     ];
 
     protected function casts(): array
@@ -39,6 +44,14 @@ class Transaction extends Model
     public function wallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class);
+    }
+
+    /**
+     * Relasi ke dompet tujuan (Ditambahkan untuk kebutuhan transfer ke orang lain)
+     */
+    public function toWallet(): BelongsTo
+    {
+        return $this->belongsTo(Wallet::class, 'to_wallet_id');
     }
 
     public function category(): BelongsTo
@@ -81,9 +94,26 @@ class Transaction extends Model
         return $this->type === 'income';
     }
 
+    /**
+     * Disesuaikan agar tanda + atau - dinamis tergantung siapa yang melihat
+     */
     public function getFormattedAmountAttribute(): string
     {
-        $prefix = $this->is_income ? '+' : '-';
+        $currentUserId = auth()->id();
+
+        // Default penentuan prefix awal
+        $prefix = '-';
+
+        if ($this->type === 'income') {
+            $prefix = '+';
+        } elseif ($this->type === 'transfer') {
+            // Jika user_id transaksi BUKAN milik user yang sedang login,
+            // berarti ini adalah transfer masuk bagi user tersebut.
+            if ($this->user_id !== $currentUserId) {
+                $prefix = '';
+            }
+        }
+
         return $prefix . 'Rp ' . number_format($this->amount, 0, ',', '.');
     }
 }
