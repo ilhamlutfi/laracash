@@ -186,11 +186,11 @@
                             Batal
                         </button>
                         <button type="button" wire:click="save" @class([
-                            'flex-1 py-3 rounded-xl text-white text-sm font-bold transition-all shadow-md',
-                            'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' =>
+                            'flex-1 py-3 rounded-xl text-sm font-bold transition-all shadow-md',
+                            'text-white bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' =>
                                 $type === 'income',
-                            'bg-red-500 hover:bg-red-600 shadow-red-200' => $type === 'expense',
-                            'bg-indigo-500 hover:bg-indigo-600 shadow-indigo-200' =>
+                            'text-white bg-red-500 hover:bg-red-600 shadow-red-200' => $type === 'expense',
+                            'text-black bg-indigo-500 hover:bg-indigo-600 shadow-indigo-200' =>
                                 $type === 'transfer',
                         ])>
                             Simpan {{ $type === 'transfer' ? 'Transfer' : '' }}
