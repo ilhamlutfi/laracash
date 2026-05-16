@@ -2,9 +2,8 @@
     @if ($showModal)
         <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
 
-            {{-- Backdrop --}}
-            <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity"
-                wire:click="$set('showModal', false)"></div>
+           {{-- Overlay --}}
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" wire:click="$set('showForm', false)"></div>
 
             {{-- Modal --}}
             <div
@@ -61,97 +60,104 @@
                     </div>
 
                     {{-- Alur Input Sesuai Tipe Transaksi --}}
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-    {{-- SISI KIRI: Dompet Asal --}}
-    <div>
-        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">
-            {{ $type === 'transfer' ? 'Dari Dompet' : 'Dompet' }}
-        </label>
-        <select wire:model.live="wallet_id" class="w-full rounded-xl border-slate-200 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-300 transition-all">
-            <option value="" hidden>- pilih dompet -</option>
-            @foreach ($wallets as $w)
-                <option value="{{ $w->id }}">{{ $w->name }}</option>
-            @endforeach
-        </select>
-        @error('wallet_id')
-            <p class="text-xs text-red-500 mt-1.5">⚠️ {{ $message }}</p>
-        @enderror
-    </div>
+                        {{-- SISI KIRI: Dompet Asal --}}
+                        <div>
+                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                {{ $type === 'transfer' ? 'Dari Dompet' : 'Dompet' }}
+                            </label>
+                            <select wire:model.live="wallet_id"
+                                class="w-full rounded-xl border-slate-200 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-300 transition-all">
+                                <option value="" hidden>- pilih dompet -</option>
+                                @foreach ($wallets as $w)
+                                    <option value="{{ $w->id }}">{{ $w->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('wallet_id')
+                                <p class="text-xs text-red-500 mt-1.5">⚠️ {{ $message }}</p>
+                            @enderror
+                        </div>
 
-    {{-- SISI KANAN JIKA BUKAN TRANSFER: Kategori --}}
-    @if ($type !== 'transfer')
-        <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">Kategori</label>
-            <select wire:model="category_id" class="w-full rounded-xl border-slate-200 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-300 transition-all">
-                <option value="" hidden>- pilih kategori -</option>
-                @foreach ($categories as $c)
-                    <option value="{{ $c->id }}">{{ $c->name }}</option>
-                @endforeach
-            </select>
-            @error('category_id')
-                <p class="text-xs text-red-500 mt-1.5">⚠️ {{ $message }}</p>
-            @enderror
-        </div>
-    @endif
+                        {{-- SISI KANAN JIKA BUKAN TRANSFER: Kategori --}}
+                        @if ($type !== 'transfer')
+                            <div>
+                                <label
+                                    class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">Kategori</label>
+                                <select wire:model="category_id"
+                                    class="w-full rounded-xl border-slate-200 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-300 transition-all">
+                                    <option value="" hidden>- pilih kategori -</option>
+                                    @foreach ($categories as $c)
+                                        <option value="{{ $c->id }}">{{ $c->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('category_id')
+                                    <p class="text-xs text-red-500 mt-1.5">⚠️ {{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endif
 
-    {{-- SISI KANAN JIKA TRANSFER: Pilihan Penerima (Diri sendiri / Orang lain) --}}
-    @if ($type === 'transfer')
-        <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">Penerima Transfer</label>
-            <select wire:model.live="target_user_id" class="w-full rounded-xl border-slate-200 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-300 transition-all">
-                <option value="" hidden>- pilih penerima -</option>
+                        {{-- SISI KANAN JIKA TRANSFER: Pilihan Penerima (Diri sendiri / Orang lain) --}}
+                        @if ($type === 'transfer')
+                            <div>
+                                <label
+                                    class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">Penerima
+                                    Transfer</label>
+                                <select wire:model.live="target_user_id"
+                                    class="w-full rounded-xl border-slate-200 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-300 transition-all">
+                                    <option value="" hidden>- pilih penerima -</option>
 
-                <option value="{{ auth()->id() }}" class="font-bold text-indigo-600">✨ Diri Sendiri (Antar Dompet)</option>
+                                    <option value="{{ auth()->id() }}" class="font-bold text-indigo-600">✨ Diri Sendiri
+                                        (Antar Dompet)</option>
 
-                <optgroup label="Pengguna Lain">
-                    @foreach ($otherUsers as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                    @endforeach
-                </optgroup>
-            </select>
-            @error('target_user_id')
-                <p class="text-xs text-red-500 mt-1.5">⚠️ {{ $message }}</p>
-            @enderror
-        </div>
-    @endif
-</div>
+                                    <optgroup label="Pengguna Lain">
+                                        @foreach ($otherUsers as $user)
+                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                </select>
+                                @error('target_user_id')
+                                    <p class="text-xs text-red-500 mt-1.5">⚠️ {{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endif
+                    </div>
 
-{{-- BARIS SELEKSI DOMPET TUJUAN --}}
-@if ($type === 'transfer')
-    <div class="mt-4 transition-all duration-300">
-        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">
-            {{ $target_user_id == auth()->id() ? 'Ke Dompet Saya yang Lain' : 'Transfer Ke Dompet Tujuan' }}
-        </label>
-        <select wire:model="to_wallet_id"
-            @disabled(empty($target_user_id))
-            @class([
-                'w-full rounded-xl border-slate-200 py-2.5 text-sm font-medium transition-all',
-                'bg-slate-100 text-slate-400 cursor-not-allowed' => empty($target_user_id),
-                'bg-slate-50 text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-300' => !empty($target_user_id)
-            ])>
+                    {{-- BARIS SELEKSI DOMPET TUJUAN --}}
+                    @if ($type === 'transfer')
+                        <div class="mt-4 transition-all duration-300">
+                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                {{ $target_user_id == auth()->id() ? 'Ke Dompet Saya yang Lain' : 'Transfer Ke Dompet Tujuan' }}
+                            </label>
+                            <select wire:model="to_wallet_id" @disabled(empty($target_user_id)) @class([
+                                'w-full rounded-xl border-slate-200 py-2.5 text-sm font-medium transition-all',
+                                'bg-slate-100 text-slate-400 cursor-not-allowed' => empty($target_user_id),
+                                'bg-slate-50 text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-300' => !empty(
+                                    $target_user_id
+                                ),
+                            ])>
 
-            @if (empty($target_user_id))
-                <option value="">- Silakan pilih penerima terlebih dahulu -</option>
-            @else
-                <option value="" hidden>- pilih dompet tujuan -</option>
-                @forelse ($targetWallets as $w)
-                    <option value="{{ $w->id }}">{{ $w->name }}</option>
-                @empty
-                    @if($target_user_id == auth()->id())
-                        <option value="">⚠️ Anda tidak memiliki dompet cadangan lain</option>
-                    @else
-                        <option value="">⚠️ Pengguna ini tidak memiliki dompet aktif</option>
+                                @if (empty($target_user_id))
+                                    <option value="">- Silakan pilih penerima terlebih dahulu -</option>
+                                @else
+                                    <option value="" hidden>- pilih dompet tujuan -</option>
+                                    @forelse ($targetWallets as $w)
+                                        <option value="{{ $w->id }}">{{ $w->name }}</option>
+                                    @empty
+                                        @if ($target_user_id == auth()->id())
+                                            <option value="">⚠️ Anda tidak memiliki dompet cadangan lain</option>
+                                        @else
+                                            <option value="">⚠️ Pengguna ini tidak memiliki dompet aktif</option>
+                                        @endif
+                                    @endforelse
+                                @endif
+                            </select>
+
+                            @error('to_wallet_id')
+                                <p class="text-xs text-red-500 mt-1.5">⚠️ {{ $message }}</p>
+                            @enderror
+                        </div>
                     @endif
-                @endforelse
-            @endif
-        </select>
-
-        @error('to_wallet_id')
-            <p class="text-xs text-red-500 mt-1.5">⚠️ {{ $message }}</p>
-        @enderror
-    </div>
-@endif
 
                     {{-- Date --}}
                     <div>

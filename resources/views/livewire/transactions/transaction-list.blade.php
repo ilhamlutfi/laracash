@@ -100,21 +100,43 @@
                 class="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors group">
 
                 {{-- Category Icon --}}
+                @php
+                    // Logika penentuan warna & icon dinamis
+                    $iconColor = '#6b7280'; // Default gray
+                    $iconSymbol = '↑';
+
+                    if ($tx->type === 'income') {
+                        $iconColor = '#10b981'; // emerald-500
+                        $iconSymbol = '↓';
+                    } elseif ($tx->type === 'expense') {
+                        $iconColor = '#ef4444'; // red-500
+                        $iconSymbol = '↑';
+                    } elseif ($tx->type === 'transfer') {
+                        if ($tx->user_id !== auth()->id()) {
+                            // Transfer Masuk dari orang lain
+                            $iconColor = '#10b981';
+                            $iconSymbol = '↓';
+                        } elseif ($tx->user_id === auth()->id() && !$tx->is_internal_transfer && $tx->target_user_id) {
+                            // Transfer Keluar ke orang lain
+                            $iconColor = '#ef4444';
+                            $iconSymbol = '↑';
+                        } else {
+                            // Transfer antar dompet sendiri
+                            $iconColor = $tx->category?->color ?? '#6b7280';
+                            $iconSymbol = '⇄';
+                        }
+                    }
+                @endphp
+
                 <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-base font-bold"
-                    style="background-color: {{ $tx->category?->color ?? '#6b7280' }}20; color: {{ $tx->category?->color ?? '#6b7280' }}">
-                    @if ($tx->type === 'income')
-                        ↓
-                    @elseif($tx->type === 'transfer')
-                        ⇄
-                    @else
-                        ↑
-                    @endif
+                    style="background-color: {{ $iconColor }}20; color: {{ $iconColor }}">
+                    {{ $iconSymbol }}
                 </div>
 
                 {{-- Info --}}
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-semibold text-slate-900 truncate">
-                        {{ $tx->note ?: $tx->category?->name ?? 'Transaksi' }}
+                        {{ $tx->note ?: ($tx->type === 'transfer' ? 'Transfer Saldo' : $tx->category->name ?? 'Transaksi') }}
                     </p>
                     <div class="flex items-center gap-2 mt-0.5">
                         <span class="text-xs text-slate-400">
@@ -122,16 +144,29 @@
                         </span>
                         <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                         <span class="text-xs text-slate-400">{{ $tx->wallet->name }}</span>
+
                         @if ($tx->category)
                             <span class="text-xs px-2 py-0.5 rounded-full font-medium"
                                 style="background-color: {{ $tx->category->color }}20; color: {{ $tx->category->color }}">
                                 {{ $tx->category->name }}
                             </span>
-                            {{-- Jika transfer, tampilkan badge khusus --}}
                         @else
-                            <span class="text-xs px-2 py-0.5 rounded-full font-medium text-slate-400 bg-slate-100">
-                                Transfer
-                            </span>
+                            {{-- Badge Dinamis Khusus Transfer --}}
+                            @if($tx->type === 'transfer')
+                                @if($tx->user_id !== auth()->id())
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-medium text-emerald-600 bg-emerald-50">
+                                        TF Masuk
+                                    </span>
+                                @elseif($tx->user_id === auth()->id() && !$tx->is_internal_transfer && $tx->target_user_id)
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-medium text-red-500 bg-red-50">
+                                        TF Keluar
+                                    </span>
+                                @else
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-medium text-slate-400 bg-slate-100">
+                                        TF Dompet
+                                    </span>
+                                @endif
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -140,18 +175,30 @@
                 <div class="flex flex-col items-end gap-1 flex-shrink-0">
                     <p @class([
                         'text-sm font-bold',
-                        'text-emerald-600' => $tx->type === 'income',
-                        'text-red-500' => $tx->type === 'expense',
+                        'text-emerald-600' =>
+                            $tx->type === 'income' ||
+                            ($tx->type === 'transfer' && $tx->user_id !== auth()->id()),
+                        'text-red-500' =>
+                            $tx->type === 'expense' ||
+                            ($tx->type === 'transfer' && $tx->user_id === auth()->id()),
                     ])>
-                        {{ $tx->formatted_amount }}
+                        {{-- Tanda + hanya ditampilkan secara paksa di blade jika transfer masuk agar serasi dengan modifikasi model --}}
+                        @if($tx->type === 'transfer' && $tx->user_id !== auth()->id() && !str_contains($tx->formatted_amount, '+'))
+                            +{{ $tx->formatted_amount }}
+                        @else
+                            {{ $tx->formatted_amount }}
+                        @endif
                     </p>
-                    {{-- Action buttons (shown on hover) --}}
-                    <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
-                        <button @click="$dispatch('edit-transaction', { id: {{ $tx->id }} })"
-                            class="text-xs text-slate-400 hover:text-brand-500 transition-colors">✏️</button>
-                        <button wire:click="confirmDelete({{ $tx->id }}, '{{ addslashes($tx->note) }}')"
-                            class="text-xs text-slate-400 hover:text-red-500 transition-colors">🗑️</button>
-                    </div>
+
+                    {{-- Action buttons (Hanya muncul jika ini transaksi milik saya sendiri) --}}
+                    @if ($tx->user_id === auth()->id())
+                        <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
+                            <button @click="$dispatch('edit-transaction', { id: {{ $tx->id }} })"
+                                class="text-xs text-slate-400 hover:text-brand-500 transition-colors">✏️</button>
+                            <button wire:click="confirmDelete({{ $tx->id }}, '{{ addslashes($tx->note) }}')"
+                                class="text-xs text-slate-400 hover:text-red-500 transition-colors">🗑️</button>
+                        </div>
+                    @endif
                 </div>
             </div>
         @empty
@@ -164,7 +211,7 @@
     </div>
 
     {{-- Pagination --}}
-    <div class="mt-8 pb-20 sm:pb-0"> {{-- pb-20 khusus mobile agar menjauh dari bottom nav --}}
+    <div class="mt-8 pb-20 sm:pb-0">
         {{ $transactions->links() }}
     </div>
 

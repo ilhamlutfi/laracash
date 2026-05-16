@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-slate-900">Dompet</h1>
         <button wire:click="openCreate"
-            class="flex items-center gap-2 bg-brand-500 hover:bg-brand-600 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+            class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
             + Tambah
         </button>
     </div>
@@ -23,37 +23,46 @@
                 'bg-white border-slate-100 shadow-sm' => $wallet->is_active,
                 'bg-slate-50 border-slate-100 opacity-60' => !$wallet->is_active,
             ])>
-                {{-- Color accent --}}
-                <div class="absolute top-0 right-0 w-24 h-24 rounded-full -translate-y-1/2 translate-x-1/3 opacity-10"
+                {{-- Color accent - Diperbaiki: Ditambahkan z-0 agar berada di lapisan paling belakang --}}
+                <div class="absolute top-0 right-0 w-24 h-24 rounded-full -translate-y-1/2 translate-x-1/3 opacity-10 z-0"
                     style="background-color: {{ $wallet->color }}"></div>
 
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white text-lg font-bold"
-                            style="background-color: {{ $wallet->color }}">
-                            {{ substr($wallet->name, 0, 1) }}
+                {{-- Content Container - Diperbaiki: Ditambahkan relative z-10 agar berada di atas dekorasi warna --}}
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white text-lg font-bold"
+                                style="background-color: {{ $wallet->color }}">
+                                {{ substr($wallet->name, 0, 1) }}
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-900">{{ $wallet->name }}</p>
+                                <p class="text-xs text-slate-400">{{ $wallet->type_label }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="font-semibold text-slate-900">{{ $wallet->name }}</p>
-                            <p class="text-xs text-slate-400">{{ $wallet->type_label }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
-                        <button wire:click="openEdit({{ $wallet->id }})"
-                            class=" flex items-center justify-center rounded-xl hover:bg-white active:bg-white text-base">✏️</button>
-                        <button wire:click="toggleActive({{ $wallet->id }})"
-                            class=" flex items-center justify-center rounded-xl hover:bg-white active:bg-white text-base">
-                            {{ $wallet->is_active ? '👁️' : '🚫' }}
-                        </button>
-                        <button wire:click="confirmDelete({{ $wallet->id }}, '{{ $wallet->name }}')"
-                            class=" flex items-center justify-center rounded-xl hover:bg-white active:bg-white text-base">🗑️</button>
-                    </div>
-                </div>
 
-                <p class="text-xl font-bold text-slate-900">
-                    Rp {{ number_format($wallet->balance, 0, ',', '.') }}
-                </p>
-                <p class="text-xs text-slate-400 mt-1">{{ $wallet->transactions_count }} transaksi</p>
+                        {{-- Action Buttons - Diperbaiki: Ukuran tombol (Hitbox) diperbesar menjadi w-8 h-8 agar mudah ditekan --}}
+                        <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
+                            <button wire:click="openEdit({{ $wallet->id }})" title="Edit Dompet"
+                                class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white active:bg-white text-sm transition-colors">
+                                ✏️
+                            </button>
+                            <button wire:click="toggleActive({{ $wallet->id }})" title="{{ $wallet->is_active ? 'Nonaktifkan' : 'Aktifkan' }}"
+                                class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white active:bg-white text-sm transition-colors">
+                                {{ $wallet->is_active ? '👁️' : '🚫' }}
+                            </button>
+                            <button wire:click="confirmDelete({{ $wallet->id }}, '{{ addslashes($wallet->name) }}')" title="Hapus Dompet"
+                                class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white text-red-500 hover:text-red-600 active:bg-white text-sm transition-colors">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="text-xl font-bold text-slate-900">
+                        Rp {{ number_format($wallet->balance, 0, ',', '.') }}
+                    </p>
+                    <p class="text-xs text-slate-400 mt-1">{{ $wallet->transactions_count }} transaksi</p>
+                </div>
             </div>
         @endforeach
     </div>
@@ -61,13 +70,11 @@
     {{-- Wallet Form Modal --}}
     @if ($showForm)
         <div class="fixed inset-0 z-[9999]" x-data x-init="$el.querySelector('[data-modal]').focus()">
-
             {{-- Overlay --}}
             <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" wire:click="$set('showForm', false)"></div>
 
             {{-- Modal Container --}}
             <div class="relative flex items-center justify-center min-h-screen p-4">
-
                 <div data-modal tabindex="-1"
                     class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
                     x-transition:enter="transition ease-out duration-300"
@@ -129,13 +136,14 @@
                     </div>
                 </div>
             </div>
+        </div>
     @endif
 
+    {{-- Delete Confirmation Modal --}}
     @if ($showDeleteModal)
         <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" wire:click="$set('showDeleteModal', false)">
-            </div>
-            <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center" x-data
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" wire:click="$set('showDeleteModal', false)"></div>
+            <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center"
                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-90"
                 x-transition:enter-end="opacity-100 scale-100">
 
@@ -159,6 +167,6 @@
                 </div>
             </div>
         </div>
-    @endifdiv>
     @endif
+
 </div>

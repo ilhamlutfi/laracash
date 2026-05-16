@@ -4,7 +4,7 @@ namespace App\Livewire\Archive;
 
 use App\Services\TransactionService;
 use Livewire\Component;
-use Livewire\WithPagination; // Wajib untuk pagination
+use Livewire\WithPagination;
 
 class ArchiveList extends Component
 {
@@ -13,8 +13,6 @@ class ArchiveList extends Component
     public int $selectedYear;
     public int $selectedMonth;
     public array $months = [];
-
-    // Hapus properti: public $detail; <- Ini yang bikin error
 
     public function mount(TransactionService $service): void
     {
@@ -32,11 +30,11 @@ class ArchiveList extends Component
 
     public function render(TransactionService $service)
     {
-        // Ambil data di render() agar selalu fresh dan mendukung pagination
         $detail = $service->getMonthlySummary(
             auth()->id(),
             $this->selectedYear,
-            $this->selectedMonth
+            $this->selectedMonth,
+            7
         );
 
         return view('livewire.archive.archive-list', [
@@ -44,6 +42,8 @@ class ArchiveList extends Component
             'income'       => $detail['income'],
             'expense'      => $detail['expense'],
             'balance'      => $detail['balance'],
+            'transfer_in'  => $detail['transfer_in'],  // Tambahan
+            'transfer_out' => $detail['transfer_out'], // Tambahan
         ])->layout('layouts.app', ['title' => 'Arsip Bulanan']);
     }
 }
