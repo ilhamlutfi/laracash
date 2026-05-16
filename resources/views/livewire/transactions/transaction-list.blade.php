@@ -102,7 +102,13 @@
                 {{-- Category Icon --}}
                 <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-base font-bold"
                     style="background-color: {{ $tx->category?->color ?? '#6b7280' }}20; color: {{ $tx->category?->color ?? '#6b7280' }}">
-                    {{ $tx->type === 'income' ? '↓' : '↑' }}
+                    @if ($tx->type === 'income')
+                        ↓
+                    @elseif($tx->type === 'transfer')
+                        ⇄
+                    @else
+                        ↑
+                    @endif
                 </div>
 
                 {{-- Info --}}
@@ -120,6 +126,11 @@
                             <span class="text-xs px-2 py-0.5 rounded-full font-medium"
                                 style="background-color: {{ $tx->category->color }}20; color: {{ $tx->category->color }}">
                                 {{ $tx->category->name }}
+                            </span>
+                            {{-- Jika transfer, tampilkan badge khusus --}}
+                        @else
+                            <span class="text-xs px-2 py-0.5 rounded-full font-medium text-slate-400 bg-slate-100">
+                                Transfer
                             </span>
                         @endif
                     </div>

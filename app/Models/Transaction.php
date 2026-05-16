@@ -14,11 +14,16 @@ class Transaction extends Model
     protected $fillable = [
         'user_id',
         'wallet_id',
+        'from_wallet_id',
+        'to_wallet_id',
+        'target_user_id',
         'category_id',
         'type',
         'amount',
         'note',
-        'transaction_date'
+        'transaction_date',
+        'is_transfer',
+        'is_internal_transfer'
     ];
 
     protected function casts(): array
