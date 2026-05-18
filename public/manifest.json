@@ -7,20 +7,12 @@
     "theme_color": "#4f46e5",
     "icons": [
         {
-<<<<<<< HEAD
-            "src": "/img/logo-shortcut.png",
-=======
             "src": "https://cash.mubatekno.com/img/logo-shortcut.png",
->>>>>>> 0982d6945947b2da9dc166ab0aeb76912a6c1916
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-<<<<<<< HEAD
-            "src": "/img/logo-shortcut.png",
-=======
             "src": "https://cash.mubatekno.com/img/logo-shortcut.png",
->>>>>>> 0982d6945947b2da9dc166ab0aeb76912a6c1916
             "sizes": "512x512",
             "type": "image/png"
         }
