@@ -156,11 +156,89 @@
         }
     </script>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js');
+    <!-- Load Firebase Core dan Messaging SDK untuk Halaman Depan -->
+    <script data-navigate-once src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script data-navigate-once src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+
+    <script data-navigate-once>
+        if (!window.firebaseInitialized) {
+            window.firebaseInitialized = true;
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyC7eS_NEip3Jhr1MhuiNITMaV2U9ceKwPY",
+                authDomain: "cashapp-pwa.firebaseapp.com",
+                projectId: "cashapp-pwa",
+                storageBucket: "cashapp-pwa.firebasestorage.app",
+                messagingSenderId: "1024421524490",
+                appId: "1:1024421524490:web:727b8eac441cd933049bf3",
+                measurementId: "G-3G4PXBDTP5"
+            };
+
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+
+            const messaging = firebase.messaging();
+
+            // =========================================================================
+            // BANNER TETAP MUNCUL MESKIPUN APLIKASI SEDANG DIBUKA (FOREGROUND MODE)
+            // =========================================================================
+            messaging.onMessage((payload) => {
+                console.log('[app.blade.php] Menerima notifikasi di foreground:', payload);
+
+                const title = payload.notification?.title || payload.data?.title || "[CASHAPP] Transaksi";
+                const body = payload.notification?.body || payload.data?.body || "Ada transaksi baru.";
+                const targetUrl = payload.data?.url || '/';
+
+                // Minta Service Worker yang sedang aktif saat ini untuk memunculkan banner resmi
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then((registration) => {
+                        registration.showNotification(title, {
+                            body: body,
+                            icon: '/icon-192x192.png',
+                            badge: '/badge-72x72.png',
+                            data: {
+                                url: targetUrl
+                            },
+                            tag: 'vibrate-notification', // Mencegah penumpukan notifikasi yang sama
+                            renotify: true
+                        });
+                    });
+                }
             });
+            // =========================================================================
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+
+                        const askNotificationPermission = () => {
+                            Notification.requestPermission().then((permission) => {
+                                if (permission === 'granted') {
+                                    messaging.getToken({
+                                        vapidKey: 'BGUEtvnhpZCYB1NuToKXBCvDMHa75klSX1MTD5Lx3xc5DyW8BMKLMOVslH0ttMgRzlpB6rL4EGgFI8atLPhMInY',
+                                        serviceWorkerRegistration: registration
+                                    }).then((currentToken) => {
+                                        if (currentToken) {
+                                            Livewire.dispatch('saveFcmToken', {
+                                                token: currentToken
+                                            });
+                                        }
+                                    });
+                                }
+                                document.removeEventListener('click', askNotificationPermission);
+                                document.removeEventListener('touchstart', askNotificationPermission);
+                            });
+                        };
+
+                        document.addEventListener('click', askNotificationPermission, {
+                            once: true
+                        });
+                        document.addEventListener('touchstart', askNotificationPermission, {
+                            once: true
+                        });
+                    });
+            }
         }
     </script>
 </body>

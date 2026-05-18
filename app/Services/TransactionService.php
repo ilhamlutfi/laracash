@@ -7,6 +7,7 @@ use App\Models\Wallet;
 use App\Mail\TransactionNotificationMail; // Import Mailable
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TransactionService
@@ -22,6 +23,9 @@ class TransactionService
 
         // 2. Panggil fungsi kirim email langsung dari sini (Diluar DB Transaction)
         $this->sendEmailNotification($transaction);
+
+        // 3. Panggil fungsi kirim push notification langsung dari sini (Diluar DB Transaction)
+        $this->sendPushNotification($transaction);
 
         return $transaction;
     }
@@ -55,6 +59,74 @@ class TransactionService
             // Jika driver queue error/tidak siap, fallback ke pengiriman langsung (send)
             Log::error('Queue gagal, mengirim email secara langsung: ' . $e->getMessage());
             Mail::to($listEmail)->send($emailView);
+        }
+    }
+
+    /**
+     * Method Mengirim Push Notification ke PWA Android via HTTP Client (FCM V1 API)
+     */
+    public function sendPushNotification(Transaction $transaction): void
+    {
+        $fcmToken = $transaction->user?->fcm_token;
+        if (!$fcmToken) {
+            return;
+        }
+
+        $tipeIndo = $transaction->type === 'income' ? 'Pemasukan' : ($transaction->type === 'expense' ? 'Pengeluaran' : 'Transfer');
+        $simbol = $transaction->type === 'income' ? '+' : '-';
+        $nominal = number_format($transaction->amount, 0, ',', '.');
+
+        $title = "[CASHAPP] Notifikasi Transaksi";
+        $body = "Ada {$tipeIndo} baru: {$simbol}Rp {$nominal} pada dompet {$transaction->wallet?->name}.";
+
+        // Dilempar ke Queue Supervisor agar proses input Livewire tidak terganggu loading API Google
+        dispatch(function () use ($fcmToken, $title, $body) {
+
+            // Ambil Access Token OAuth2 secara dinamis
+            $accessToken = $this->getGoogleAccessToken();
+
+            if (!$accessToken) {
+                Log::error('FCM Gagal: Autentikasi Google Access Token tidak valid.');
+                return;
+            }
+
+            // Hit langsung ke REST API Firebase Cloud Messaging V1 resmi milik Google
+            $response = Http::withToken($accessToken)
+                ->post('https://fcm.googleapis.com/v1/projects/cashapp-pwa/messages:send', [
+                    'message' => [
+                        'token' => $fcmToken,
+                        'notification' => [
+                            'title' => $title,
+                            'body' => $body,
+                        ],
+                        'data' => [
+                            'url' => url('/transactions'), // Rute ketika notifikasi di Android diklik
+                        ]
+                    ]
+                ]);
+
+            if ($response->failed()) {
+                Log::error('Gagal mengirim FCM HTTP Client: ' . $response->body());
+            }
+        })->onQueue('notifications');
+    }
+
+    /**
+     * Helper Token Generator menggunakan Google API Client
+     */
+    private function getGoogleAccessToken(): ?string
+    {
+        try {
+            $client = new \Google\Client();
+            // Letakkan file JSON kredensial Firebase di: storage/app/firebase-service-account.json
+            $client->setAuthConfig(storage_path('app/firebase-service-account.json'));
+            $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
+
+            $token = $client->fetchAccessTokenWithAssertion();
+            return $token['access_token'] ?? null;
+        } catch (\Exception $e) {
+            Log::error('OAuth2 Google Error: ' . $e->getMessage());
+            return null;
         }
     }
 

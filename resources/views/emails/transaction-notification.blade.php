@@ -108,7 +108,7 @@
 
         <div class="logo-container">
             <a href="{{ config('app.url') }}" target="_blank">
-                <img src="https://laravel.com/img/notification-logo-v2.1.png" alt="Laravel Logo" class="laravel-logo">
+                <img src="https://laravel.com/img/notification-logo-v2.1.png" alt="" class="laravel-logo">
             </a>
         </div>
 
@@ -147,6 +147,10 @@
         </div>
 
         <table class="table">
+            <tr>
+                <td>Akun</td>
+                <td>: {{ $transaction->user?->name ?? '-' }}</td>
+            </tr>
             <tr>
                 <td>Tipe Transaksi</td>
                 <td>: {{ $tipeIndo }}</td>

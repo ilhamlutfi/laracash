@@ -5,6 +5,7 @@ namespace App\Livewire\Transactions;
 use App\Models\Category;
 use App\Models\Wallet;
 use App\Services\TransactionService;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -85,6 +86,22 @@ class TransactionList extends Component
     {
         // Reset ke halaman 1 agar transaksi terbaru langsung muncul di paling atas
         $this->resetPage();
+    }
+
+    #[On('saveFcmToken')]
+    public function updateFcmToken(string $token): void
+    {
+        $user = auth()->user();
+
+        if ($user) {
+            // Update token ke kolom fcm_token di tabel users
+            $user->update([
+                'fcm_token' => $token
+            ]);
+
+            // Tampilkan pesan di console log server untuk memastikan masuk
+            Log::info("Token FCM untuk User ID {$user->id} berhasil diperbarui.");
+        }
     }
 
     public function render(TransactionService $service)
