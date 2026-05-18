@@ -4,17 +4,58 @@ namespace App\Services;
 
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Mail\TransactionNotificationMail; // Import Mailable
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class TransactionService
 {
     public function create(array $data, int $userId): Transaction
     {
-        return DB::transaction(function () use ($data, $userId) {
+        // 1. Jalankan operasi database terlebih dahulu
+        $transaction = DB::transaction(function () use ($data, $userId) {
             $transaction = Transaction::create([...$data, 'user_id' => $userId]);
             $this->applyTransactionEffect($transaction);
             return $transaction;
         });
+
+        // 2. Panggil fungsi kirim email langsung dari sini (Diluar DB Transaction)
+        $this->sendEmailNotification($transaction);
+
+        return $transaction;
+    }
+
+    /**
+     * Method Khusus untuk menghandle Notifikasi Email
+     */
+    public function sendEmailNotification(Transaction $transaction): void
+    {
+        // Load relasi agar data di template email lengkap
+        $transaction->load(['wallet', 'category', 'toWallet']);
+
+        // Definisikan daftar email manual sesuai kebutuhan Anda
+        $listEmail = [
+            'ilhamlutfi153@gmail.com',
+            'risarahmayani@gmail.com',
+        ];
+
+        $listEmail = array_filter($listEmail);
+
+        if (empty($listEmail)) {
+            return;
+        }
+
+        $emailView = new TransactionNotificationMail($transaction);
+
+        try {
+            // Coba masukkan ke dalam antrean (Queue) agar aplikasi instan/cepat
+            Mail::to($listEmail)->queue($emailView);
+        } catch (\Exception $e) {
+            // Jika driver queue error/tidak siap, fallback ke pengiriman langsung (send)
+            Log::error('Queue gagal, mengirim email secara langsung: ' . $e->getMessage());
+            Mail::to($listEmail)->send($emailView);
+        }
     }
 
     public function update(Transaction $transaction, array $data): Transaction
